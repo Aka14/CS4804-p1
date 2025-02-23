@@ -313,15 +313,11 @@ class CornersProblem(search.SearchProblem):
         Returns the start state (in your state space, not the full Pacman state
         space)
         """
-        
-
-
-
-        "*** YOUR CODE HERE ***"
-
-
-
-
+    
+        #state = {"pacman_position": self.starting_position, "visited_corners": tuple()}
+        state = (self.starting_position, tuple())  
+        return state
+    
 
         util.raise_not_defined()
 
@@ -331,15 +327,10 @@ class CornersProblem(search.SearchProblem):
         Returns whether this search state is a goal state of the problem.
         """
         
-
-
-
-
-        "*** YOUR CODE HERE ***"
-
-
-
-
+        #goal state = all 4 corners visited
+        #numVisited = len(state["visited_corners"])
+        numVisited = len(state[1])
+        return numVisited == 4
 
         util.raise_not_defined()
 
@@ -365,20 +356,22 @@ class CornersProblem(search.SearchProblem):
             #   hits_wall = self.walls[nextx][nexty]
 
             # break apart the current game state
-            position = state["pacman_position"]
-            corner_tracker = state["visited_corners"]
-            
-            
-            
-            
-            
-            
-            "*** YOUR CODE HERE ***"
-
-          
-            
-            
-            
+            #position = state["pacman_position"]
+            #corner_tracker = state["visited_corners"]
+            position = state[0]
+            corner_tracker = state[1]
+            (x,y) = position
+            (dx,dy) = Actions.direction_to_vector(action)
+            (nextx,nexty) = int(x + dx), int(y + dy)
+            hits_wall = self.walls[nextx][nexty]
+            next_position = (nextx, nexty)
+            if(not hits_wall):
+                new_corners = set(corner_tracker)
+                if(next_position in self.corners):
+                    new_corners.add(next_position)
+                next_state = (next_position, tuple(new_corners))
+                #next_state = {"pacman_position": next_position, "visited_corners": new_corners}
+                successors.append((next_state, action, 1))
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -413,13 +406,26 @@ def corners_heuristic(state: Any, problem: CornersProblem):
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
-   
+    #goal check
+    position = state[0]
+    visited_corners = state[1]
 
-
-
-
-    "*** YOUR CODE HERE ***"
-
+    if visited_corners == 4:
+        return 0
+    unvisited_corners = {corner for corner in corners if corner not in visited_corners}
+    unvisited_corners = []
+    for corner in corners:
+        if corner not in visited_corners:
+            unvisited_corners.append(corner)
+    distance_vals =[]
+    for corner in unvisited_corners:
+        distance_vals.append(util.manhattan_distance(position, corner))
+    if len(distance_vals) != 0:
+        return max(distance_vals)
+    else:
+        return 0
+    
+    
 
 
     
@@ -517,15 +523,22 @@ def food_heuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     problem.heuristic_info['wall_count']
     """
     pacman_position, food_grid = state
+    position = state[0]
+    food = state[1]
+
+    if food.count == 0:
+        return 0
     
+    distance_vals = []
 
-
-
-
-    "*** YOUR CODE HERE ***"
-
-
-
+    food_list = food.as_list()
+    for foods in food_list:
+        distance_vals.append(maze_distance(position, foods, problem.starting_game_state))
+    
+    if len(distance_vals) != 0:
+        return max(distance_vals)
+    else:
+        return 0
 
 
     util.raise_not_defined()
@@ -559,15 +572,8 @@ class ClosestDotSearchAgent(SearchAgent):
         walls = game_state.get_walls()
         problem = AnyFoodSearchProblem(game_state)
 
-        
-
-
-
-
-        
-        "*** YOUR CODE HERE ***"
-
-
+        from search import uniform_cost_search
+        return uniform_cost_search(problem)
 
 
 
@@ -607,13 +613,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         """
         (x,y) = state
 
-
-
-
-        "*** YOUR CODE HERE ***"
-
-
-
+        return self.food[x][y]
 
         
         util.raise_not_defined()
